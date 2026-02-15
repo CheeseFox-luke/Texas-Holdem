@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Texas Hold'em — Table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div id="game-screen">
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="game-label">Room <span id="roomLabel">—</span></div>
+      <div class="game-label">Hand <span id="handNum">#0</span></div>
+    </div>
+
+    <!-- Table Area -->
+    <div class="table-area">
+      <div class="poker-table">
+        <!-- Community Cards -->
+        <div class="community-cards" id="communityCards">
+          <div class="card placeholder"></div>
+          <div class="card placeholder"></div>
+          <div class="card placeholder"></div>
+          <div class="card placeholder"></div>
+          <div class="card placeholder"></div>
+        </div>
+
+        <!-- Player Seats (rendered by JS) -->
+        <div class="seats-layer" id="seatsLayer"></div>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div id="actionBar" class="action-bar">
+      <div class="waiting-msg" id="waitingMsg">Waiting for players to connect...</div>
+    </div>
+
+    <!-- Game Log -->
+    <div class="game-log" id="gameLog">
+      <div class="log-title">Game Log</div>
+      <div id="logEntries"></div>
+    </div>
+
+  </div>
+
+  <script src="js/cards.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/game.js"></script>
+
+</body>
+</html>

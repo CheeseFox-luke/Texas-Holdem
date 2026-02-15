@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Texas Hold'em</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ====== LOBBY: Setup Screen ====== -->
+  <div id="lobby">
+    <div class="lobby-inner">
+
+      <!-- Logo -->
+      <div class="logo-block">
+        <div class="logo-icon">
+          <span class="suit s">♠</span>
+          <span class="suit h">♥</span>
+          <span class="suit d">♦</span>
+          <span class="suit c">♣</span>
+        </div>
+        <h1>Texas Hold'em</h1>
+        <p class="tagline">No Limit &middot; Multiplayer</p>
+      </div>
+
+      <!-- Setup Card -->
+      <div class="setup-card">
+        <h2>Create a Table</h2>
+
+        <div class="input-row">
+          <label>Human Players</label>
+          <div class="stepper">
+            <button class="step-btn" onclick="adjustCount('human', -1)">−</button>
+            <span id="humanCount" class="step-value">1</span>
+            <button class="step-btn" onclick="adjustCount('human', 1)">+</button>
+          </div>
+        </div>
+
+        <div class="input-row">
+          <label>Bots</label>
+          <div class="stepper">
+            <button class="step-btn" onclick="adjustCount('bot', -1)">−</button>
+            <span id="botCount" class="step-value">3</span>
+            <button class="step-btn" onclick="adjustCount('bot', 1)">+</button>
+          </div>
+        </div>
+
+        <div class="total-bar">
+          <span class="total-label">Total Seats</span>
+          <span id="totalCount" class="total-value">4</span>
+          <span class="total-cap">/ 9</span>
+        </div>
+
+        <p id="errorMsg" class="error-msg"></p>
+
+        <button id="btnCreate" class="btn-primary" onclick="createRoom()">
+          Create Room
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== LINKS: Share Links Screen ====== -->
+  <div id="links-screen">
+    <div class="links-inner">
+
+      <div class="links-header">
+        <h2>Room Created</h2>
+        <p class="room-id-label">Room <span id="roomIdDisplay" class="room-id-value"></span></p>
+      </div>
+
+      <div class="links-card">
+        <p class="links-subtitle">Share these links with each player to join:</p>
+        <div id="linksList"></div>
+        <div id="botsList"></div>
+      </div>
+
+      <button class="btn-primary" onclick="enterAsPlayer1()">
+        Enter as Player 1
+      </button>
+
+    </div>
+  </div>
+
+<script>
+  let humanCount = 1;
+  let botCount = 3;
+  let createdRoom = null;
+
+  function adjustCount(type, delta) {
+    if (type === 'human') {
+      humanCount = Math.max(1, Math.min(8, humanCount + delta));
+      document.getElementById('humanCount').textContent = humanCount;
+    } else {
+      botCount = Math.max(0, Math.min(8, botCount + delta));
+      document.getElementById('botCount').textContent = botCount;
+    }
+    const total = humanCount + botCount;
+    document.getElementById('totalCount').textContent = total;
+
+    const err = document.getElementById('errorMsg');
+    if (total < 2) {
+      err.textContent = 'Need at least 2 players total';
+      err.style.display = 'block';
+    } else if (total > 9) {
+      err.textContent = 'Maximum 9 players';
+      err.style.display = 'block';
+    } else {
+      err.style.display = 'none';
+    }
+  }
+
+  async function createRoom() {
+    const total = humanCount + botCount;
+    if (total < 2 || total > 9) return;
+
+    const btn = document.getElementById('btnCreate');
+    btn.textContent = 'Creating...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/create-room', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ humanCount, botCount })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      createdRoom = data;
+      showLinksScreen(data);
+    } catch (e) {
+      document.getElementById('errorMsg').textContent = e.message;
+      document.getElementById('errorMsg').style.display = 'block';
+      btn.textContent = 'Create Room';
+      btn.disabled = false;
+    }
+  }
+
+  function showLinksScreen(data) {
+    document.getElementById('lobby').style.display = 'none';
+    document.getElementById('links-screen').style.display = 'flex';
+    document.getElementById('roomIdDisplay').textContent = data.roomId;
+
+    const list = document.getElementById('linksList');
+    list.innerHTML = '';
+
+    data.playerLinks.forEach((link, i) => {
+      const row = document.createElement('div');
+      row.className = 'link-row';
+      row.innerHTML = `
+        <div class="link-avatar human-av">${i + 1}</div>
+        <div class="link-info">
+          <div class="link-name">${link.name}</div>
+          <div class="link-url">${link.url}</div>
+        </div>
+        <button class="btn-copy" onclick="copyLink(this, '${link.url}')">Copy</button>
+      `;
+      list.appendChild(row);
+    });
+
+    // Show bots
+    const botsDiv = document.getElementById('botsList');
+    botsDiv.innerHTML = '';
+    const botNames = ['Bot Alpha', 'Bot Beta', 'Bot Gamma', 'Bot Delta',
+                       'Bot Epsilon', 'Bot Zeta', 'Bot Eta', 'Bot Theta'];
+    for (let i = 0; i < botCount; i++) {
+      const row = document.createElement('div');
+      row.className = 'link-row bot-row';
+      row.innerHTML = `
+        <div class="link-avatar bot-av">B</div>
+        <div class="link-info">
+          <div class="link-name">${botNames[i] || 'Bot ' + (i+1)}</div>
+          <div class="link-url dim">Auto-joins when game starts</div>
+        </div>
+        <span class="bot-badge">BOT</span>
+      `;
+      botsDiv.appendChild(row);
+    }
+  }
+
+  function copyLink(btn, url) {
+    navigator.clipboard.writeText(url).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'Copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  function enterAsPlayer1() {
+    if (createdRoom && createdRoom.playerLinks.length > 0) {
+      window.location.href = createdRoom.playerLinks[0].url;
+    }
+  }
+</script>
+
+</body>
+</html>

@@ -217,6 +217,193 @@ body {
   display: none;
 }
 
+/* Debug toggle */
+.debug-row { margin-top: 16px; }
+
+.toggle-btn {
+  padding: 6px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.toggle-btn.active {
+  background: rgba(239,68,68,0.15);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* ============================================================
+   DEBUG PANEL (in-game)
+   ============================================================ */
+.debug-panel {
+  position: fixed;
+  left: 16px;
+  top: 70px;
+  width: 280px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  background: rgba(0,0,0,0.75);
+  border: 1px solid var(--red);
+  border-radius: 12px;
+  padding: 16px;
+  backdrop-filter: blur(12px);
+  z-index: 20;
+}
+
+.debug-panel .debug-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--red);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.debug-section {
+  margin-bottom: 14px;
+}
+
+.debug-section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.debug-card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.debug-card-btn {
+  width: 32px;
+  height: 26px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  cursor: pointer;
+  transition: all 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.debug-card-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: var(--accent);
+}
+
+.debug-card-btn.selected {
+  background: rgba(78,168,255,0.2);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.debug-card-btn.used {
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.debug-card-btn.card-red {
+  color: var(--red);
+}
+.debug-card-btn.card-red.selected {
+  background: rgba(239,68,68,0.2);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.debug-assign-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.debug-assign-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 70px;
+}
+
+.debug-assigned-cards {
+  display: flex;
+  gap: 3px;
+}
+
+.debug-assigned-card {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(78,168,255,0.12);
+  color: var(--accent);
+}
+
+.debug-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.debug-btn.confirm {
+  background: var(--accent);
+  color: #fff;
+}
+
+.debug-btn.confirm:hover {
+  filter: brightness(1.15);
+}
+
+.debug-bot-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.debug-bot-btn {
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: 1px solid var(--border-light);
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.debug-bot-btn:hover {
+  background: var(--bg-hover);
+}
+
+.debug-bot-btn.fold:hover { background: rgba(239,68,68,0.1); }
+.debug-bot-btn.call:hover { background: rgba(34,197,94,0.1); }
+.debug-bot-btn.check:hover { background: rgba(78,168,255,0.1); }
+
 /* Primary Button */
 .btn-primary {
   width: 100%;

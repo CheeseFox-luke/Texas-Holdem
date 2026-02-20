@@ -62,6 +62,7 @@ class Game {
     this.handNumber = 0;
     this.log = [];
     this.lastHandResult = null;
+    this.debugCommunityCards = null; // Pre-set community cards for debug mode
   }
 
   // ==================== Player Management ====================
@@ -426,17 +427,29 @@ class Game {
     switch (this.phase) {
       case PHASES.PREFLOP:
         this.phase = PHASES.FLOP;
-        this.communityCards.push(...this.deck.dealMultiple(3));
+        if (this.debugCommunityCards && this.debugCommunityCards.length >= 3) {
+          this.communityCards.push(...this.debugCommunityCards.slice(0, 3));
+        } else {
+          this.communityCards.push(...this.deck.dealMultiple(3));
+        }
         this.addLog(`--- Flop: ${this.communityCards.map(cardToString).join(' ')} ---`);
         break;
       case PHASES.FLOP:
         this.phase = PHASES.TURN;
-        this.communityCards.push(this.deck.deal());
+        if (this.debugCommunityCards && this.debugCommunityCards.length >= 4) {
+          this.communityCards.push(this.debugCommunityCards[3]);
+        } else {
+          this.communityCards.push(this.deck.deal());
+        }
         this.addLog(`--- Turn: ${cardToString(this.communityCards[3])} ---`);
         break;
       case PHASES.TURN:
         this.phase = PHASES.RIVER;
-        this.communityCards.push(this.deck.deal());
+        if (this.debugCommunityCards && this.debugCommunityCards.length >= 5) {
+          this.communityCards.push(this.debugCommunityCards[4]);
+        } else {
+          this.communityCards.push(this.deck.deal());
+        }
         this.addLog(`--- River: ${cardToString(this.communityCards[4])} ---`);
         break;
       case PHASES.RIVER:
@@ -509,7 +522,7 @@ class Game {
 
   // ==================== State ====================
 
-  getState(forPlayerId = null) {
+  getState(forPlayerId = null, debugMode = false) {
     return {
       phase: this.phase,
       handNumber: this.handNumber,
@@ -524,6 +537,7 @@ class Game {
       bbIndex: this.bbIndex,
       currentPlayerIndex: this.currentPlayerIndex,
       currentPlayerId: this.currentPlayerIndex >= 0 ? this.players[this.currentPlayerIndex]?.id : null,
+      debugMode: debugMode,
       players: this.players.map((p, idx) => ({
         id: p.id,
         name: p.name,
@@ -537,7 +551,7 @@ class Game {
         isDealer: idx === this.dealerIndex,
         isSB: idx === this.sbIndex,
         isBB: idx === this.bbIndex,
-        cards: (forPlayerId === p.id || this.phase === PHASES.SHOWDOWN)
+        cards: (forPlayerId === p.id || this.phase === PHASES.SHOWDOWN || debugMode)
           ? p.cards.map(c => ({ rank: c.rank, suit: c.suit, display: cardToString(c) }))
           : p.cards.map(() => ({ hidden: true })),
         isCurrentPlayer: idx === this.currentPlayerIndex,

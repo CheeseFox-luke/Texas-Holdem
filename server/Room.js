@@ -64,7 +64,8 @@ class Room {
     }
 
     this.started = false;
-    this.botActionDelay = 1500; // 机器人行动延迟 (ms)
+    this.debugMode = options.debugMode || false;
+    this.botActionDelay = this.debugMode ? 0 : 1500; // No auto-delay in debug
   }
 
   /**
@@ -195,7 +196,14 @@ class Room {
     const currentPlayer = this.game.players[currentIndex];
     if (!currentPlayer || !currentPlayer.isBot) return;
 
-    // 延迟执行机器人操作，模拟思考时间
+    // In debug mode: don't auto-act, wait for debug_bot_action from player
+    if (this.debugMode) {
+      // Broadcast state so the debug player sees it's the bot's turn
+      this.broadcastState();
+      return;
+    }
+
+    // Normal mode: auto-act after delay
     setTimeout(() => {
       this.executeBotAction(currentPlayer);
     }, this.botActionDelay);
@@ -251,15 +259,66 @@ class Room {
     }, 4000); // 4秒后开始下一手
   }
 
-  // ==================== 网络通信 ====================
+  // ==================== Debug Methods ====================
+
+  /**
+   * Debug: manually assign cards to players and community
+   * @param {Object} assignments - { playerId: [{rank,suit},{rank,suit}], community: [{rank,suit},...] }
+   */
+  debugSetCards(assignments) {
+    if (!this.debugMode) return;
+
+    const game = this.game;
+
+    // Set player cards
+    for (const [playerId, cards] of Object.entries(assignments)) {
+      if (playerId === 'community') continue;
+      const player = game.players.find(p => p.id === playerId);
+      if (player && cards && cards.length === 2) {
+        player.cards = cards.map(c => ({ rank: c.rank, suit: c.suit }));
+      }
+    }
+
+    // Set community cards (will be revealed phase by phase)
+    if (assignments.community) {
+      game.debugCommunityCards = assignments.community.map(c => ({ rank: c.rank, suit: c.suit }));
+    }
+
+    this.broadcastState();
+  }
+
+  /**
+   * Debug: manually execute a bot's action
+   */
+  debugBotAction(botId, action, amount) {
+    if (!this.debugMode) return;
+
+    const bot = this.game.players.find(p => p.id === botId && p.isBot);
+    if (!bot) return;
+
+    const result = this.game.handleAction(botId, action, amount);
+    if (result.success) {
+      this.broadcastState();
+
+      if (this.game.phase === PHASES.SHOWDOWN) {
+        this.scheduleNextHand();
+        return;
+      }
+
+      // Check if next player is also a bot (still need debug player to control)
+      this.checkBotAction();
+    }
+  }
+
+  // ==================== Network ====================
 
   /**
    * 向所有已连接的人类玩家广播游戏状态
    */
   broadcastState() {
     for (const [playerId, ws] of Object.entries(this.playerSockets)) {
-      if (ws.readyState === 1) { // WebSocket.OPEN
-        const state = this.game.getState(playerId);
+      if (ws.readyState === 1) {
+        const state = this.game.getState(playerId, this.debugMode);
         ws.send(JSON.stringify({
           type: 'game_state',
           state
@@ -289,6 +348,7 @@ class Room {
       totalPlayers: this.humanCount + this.botCount,
       connectedPlayers: this.humanSlots.filter(s => s.connected).length,
       started: this.started,
+      debugMode: this.debugMode,
       phase: this.game.phase,
       handNumber: this.game.handNumber
     };

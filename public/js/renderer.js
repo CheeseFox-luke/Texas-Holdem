@@ -91,12 +91,15 @@ const Renderer = {
     /**
      * Full render of the game state
      */
-    render(state, myId) {
+    render(state, myId, debugMode) {
       this.renderTopBar(state);
       this.renderCommunityCards(state);
       this.renderSeats(state, myId);
       this.renderActionBar(state, myId);
       this.renderLog(state.log);
+      if (debugMode) {
+        this.renderDebugPanel(state, myId);
+      }
     },
   
     renderTopBar(state) {
@@ -273,8 +276,187 @@ const Renderer = {
         `<div class="log-entry">${entry.message}</div>`
       ).join('');
   
-      // Auto-scroll to bottom
       const logBox = document.getElementById('gameLog');
       logBox.scrollTop = logBox.scrollHeight;
+    },
+  
+    // ==================== Debug Panel ====================
+  
+    renderDebugPanel(state, myId) {
+      let panel = document.getElementById('debugPanel');
+      if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'debugPanel';
+        panel.className = 'debug-panel';
+        document.getElementById('game-screen').appendChild(panel);
+      }
+  
+      const currentPlayer = state.currentPlayerIndex >= 0 ? state.players[state.currentPlayerIndex] : null;
+      const isBotTurn = currentPlayer && currentPlayer.isBot;
+      const isPreflop = state.phase === 'preflop';
+      const isWaiting = state.phase === 'waiting';
+      const isShowdown = state.phase === 'showdown';
+  
+      let html = '<div class="debug-title">⚙ Debug Mode</div>';
+  
+      // Section 1: Card assignment (show during preflop or waiting)
+      if (isPreflop || isWaiting) {
+        html += this.renderCardPicker(state);
+      }
+  
+      // Section 2: Bot action control (when it's a bot's turn)
+      if (isBotTurn && !isShowdown) {
+        html += `<div class="debug-section">`;
+        html += `<div class="debug-section-title">${currentPlayer.name}'s Turn — Choose Action:</div>`;
+        html += `<div class="debug-bot-actions">`;
+  
+        const validActions = ['fold', 'check', 'call'];
+        // Determine which actions make sense
+        const toCall = state.currentBet - currentPlayer.bet;
+        if (toCall <= 0) {
+          html += `<button class="debug-bot-btn check" onclick="GameClient.sendDebugBotAction('${currentPlayer.id}','check')">Check</button>`;
+        } else {
+          html += `<button class="debug-bot-btn call" onclick="GameClient.sendDebugBotAction('${currentPlayer.id}','call')">Call ${toCall}</button>`;
+        }
+        html += `<button class="debug-bot-btn fold" onclick="GameClient.sendDebugBotAction('${currentPlayer.id}','fold')">Fold</button>`;
+  
+        html += `</div></div>`;
+      }
+  
+      // Section 3: Current state info
+      html += `<div class="debug-section">`;
+      html += `<div class="debug-section-title">State</div>`;
+      html += `<div style="font-size:0.65rem;color:var(--text-dim);line-height:1.6;">`;
+      html += `Phase: ${state.phase}<br>`;
+      html += `Pot: ${state.pot}<br>`;
+      html += `Current Bet: ${state.currentBet}<br>`;
+      if (currentPlayer) html += `Acting: ${currentPlayer.name}`;
+      html += `</div></div>`;
+  
+      panel.innerHTML = html;
+    },
+  
+    renderCardPicker(state) {
+      const RANKS = ['2','3','4','5','6','7','8','9','T','J','Q','K','A'];
+      const SUITS = [
+        { key: 's', sym: '♠', red: false },
+        { key: 'h', sym: '♥', red: true },
+        { key: 'd', sym: '♦', red: true },
+        { key: 'c', sym: '♣', red: false }
+      ];
+      const DISPLAY = { 'T': '10' };
+  
+      // Track which cards are already assigned
+      const usedCards = new Set();
+      state.players.forEach(p => {
+        if (p.cards) p.cards.forEach(c => {
+          if (!c.hidden) usedCards.add(c.rank + c.suit);
+        });
+      });
+  
+      // Build a grid of all 52 cards
+      let html = '<div class="debug-section">';
+      html += '<div class="debug-section-title">Card Picker — click to select, then assign</div>';
+      html += '<div class="debug-card-grid">';
+  
+      for (const suit of SUITS) {
+        for (const rank of RANKS) {
+          const key = rank + suit.key;
+          const display = (DISPLAY[rank] || rank) + suit.sym;
+          const used = usedCards.has(key) ? ' used' : '';
+          const redClass = suit.red ? ' card-red' : '';
+          const selected = (window._debugSelectedCards || []).includes(key) ? ' selected' : '';
+          html += `<button class="debug-card-btn${redClass}${used}${selected}" onclick="Renderer.debugSelectCard('${key}')">${display}</button>`;
+        }
+      }
+      html += '</div></div>';
+  
+      // Show selected cards and assign buttons
+      const selected = window._debugSelectedCards || [];
+      if (selected.length > 0) {
+        html += '<div class="debug-section">';
+        html += '<div class="debug-section-title">Selected: ';
+        html += selected.map(k => {
+          const r = k[0], s = k.slice(1);
+          const sym = { s:'♠', h:'♥', d:'♦', c:'♣' }[s];
+          const dr = DISPLAY[r] || r;
+          return `<span class="debug-assigned-card">${dr}${sym}</span>`;
+        }).join(' ');
+        html += '</div>';
+  
+        // Assign to player buttons
+        html += '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;">';
+        state.players.forEach(p => {
+          if (selected.length === 2) {
+            html += `<button class="debug-btn confirm" style="width:auto;padding:4px 10px;font-size:0.65rem;" onclick="Renderer.debugAssignCards('${p.id}')">${p.name}</button>`;
+          }
+        });
+        if (selected.length >= 3 && selected.length <= 5) {
+          html += `<button class="debug-btn confirm" style="width:auto;padding:4px 10px;font-size:0.65rem;" onclick="Renderer.debugAssignCommunity()">Community</button>`;
+        }
+        html += `<button class="debug-btn" style="width:auto;padding:4px 10px;font-size:0.65rem;background:rgba(255,255,255,0.05);color:var(--text-dim);" onclick="Renderer.debugClearSelection()">Clear</button>`;
+        html += '</div></div>';
+      }
+  
+      return html;
+    },
+  
+    // Debug helper methods
+    debugSelectCard(cardKey) {
+      if (!window._debugSelectedCards) window._debugSelectedCards = [];
+      const idx = window._debugSelectedCards.indexOf(cardKey);
+      if (idx >= 0) {
+        window._debugSelectedCards.splice(idx, 1);
+      } else {
+        if (window._debugSelectedCards.length < 5) {
+          window._debugSelectedCards.push(cardKey);
+        }
+      }
+      // Re-render debug panel
+      if (GameClient.lastState) {
+        this.renderDebugPanel(GameClient.lastState, GameClient.playerId);
+      }
+    },
+  
+    debugAssignCards(playerId) {
+      const selected = window._debugSelectedCards || [];
+      if (selected.length !== 2) return;
+  
+      const cards = selected.map(k => ({ rank: k[0], suit: k.slice(1) }));
+  
+      if (!window._debugAssignments) window._debugAssignments = {};
+      window._debugAssignments[playerId] = cards;
+  
+      // Send to server
+      GameClient.sendDebugSetCards(window._debugAssignments);
+  
+      window._debugSelectedCards = [];
+      if (GameClient.lastState) {
+        this.renderDebugPanel(GameClient.lastState, GameClient.playerId);
+      }
+    },
+  
+    debugAssignCommunity() {
+      const selected = window._debugSelectedCards || [];
+      if (selected.length < 3 || selected.length > 5) return;
+  
+      const cards = selected.map(k => ({ rank: k[0], suit: k.slice(1) }));
+  
+      if (!window._debugAssignments) window._debugAssignments = {};
+      window._debugAssignments.community = cards;
+  
+      GameClient.sendDebugSetCards(window._debugAssignments);
+  
+      window._debugSelectedCards = [];
+      if (GameClient.lastState) {
+        this.renderDebugPanel(GameClient.lastState, GameClient.playerId);
+      }
+    },
+  
+    debugClearSelection() {
+      window._debugSelectedCards = [];
+      if (GameClient.lastState) {
+        this.renderDebugPanel(GameClient.lastState, GameClient.playerId);
+      }
     }
   };

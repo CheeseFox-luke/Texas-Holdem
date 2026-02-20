@@ -33,7 +33,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
  * Returns: { roomId, playerLinks }
  */
 app.post('/api/create-room', (req, res) => {
-  const { humanCount, botCount, smallBlind, bigBlind, startingChips } = req.body;
+  const { humanCount, botCount, smallBlind, bigBlind, startingChips, debugMode } = req.body;
 
   // 验证
   const humans = parseInt(humanCount) || 1;
@@ -52,7 +52,8 @@ app.post('/api/create-room', (req, res) => {
     botCount: bots,
     smallBlind: parseInt(smallBlind) || 1,
     bigBlind: parseInt(bigBlind) || 2,
-    startingChips: parseInt(startingChips) || 100
+    startingChips: parseInt(startingChips) || 100,
+    debugMode: !!debugMode
   });
 
   const baseUrl = `${req.protocol}://${req.get('host')}`;
@@ -116,6 +117,7 @@ wss.on('connection', (ws, req) => {
     type: 'welcome',
     playerId,
     roomId,
+    debugMode: room.debugMode || false,
     state: room.game.getState(playerId)
   }));
 
@@ -126,10 +128,31 @@ wss.on('connection', (ws, req) => {
 
       switch (msg.type) {
         case 'action':
-          // 玩家操作: { type: 'action', action: 'fold'|'call'|'raise'|'check'|'allin', amount?: number }
+          // Player action: { type: 'action', action: 'fold'|'call'|'raise'|'check'|'allin', amount?: number }
           const result = room.handlePlayerAction(playerId, msg.action, msg.amount);
           if (!result.success) {
             ws.send(JSON.stringify({ type: 'error', message: result.error }));
+          }
+          break;
+
+        case 'debug_set_cards':
+          // { type: 'debug_set_cards', assignments: { playerId: [card, card], community: [card...] } }
+          if (room.debugMode) {
+            room.debugSetCards(msg.assignments);
+          }
+          break;
+
+        case 'debug_bot_action':
+          // { type: 'debug_bot_action', botId: 'bot_1', action: 'fold'|'call'|'check' }
+          if (room.debugMode) {
+            room.debugBotAction(msg.botId, msg.action, msg.amount);
+          }
+          break;
+
+        case 'debug_start_hand':
+          // Start a new hand in debug mode
+          if (room.debugMode) {
+            room.startNewHand();
           }
           break;
 

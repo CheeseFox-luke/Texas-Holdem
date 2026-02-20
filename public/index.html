@@ -54,6 +54,11 @@
           <span class="total-cap">/ 9</span>
         </div>
 
+        <div class="input-row debug-row">
+          <label>Debug Mode</label>
+          <button id="debugToggle" class="toggle-btn" onclick="toggleDebug()">OFF</button>
+        </div>
+
         <p id="errorMsg" class="error-msg"></p>
 
         <button id="btnCreate" class="btn-primary" onclick="createRoom()">
@@ -88,7 +93,15 @@
 <script>
   let humanCount = 1;
   let botCount = 3;
+  let debugMode = false;
   let createdRoom = null;
+
+  function toggleDebug() {
+    debugMode = !debugMode;
+    const btn = document.getElementById('debugToggle');
+    btn.textContent = debugMode ? 'ON' : 'OFF';
+    btn.classList.toggle('active', debugMode);
+  }
 
   function adjustCount(type, delta) {
     if (type === 'human') {
@@ -125,7 +138,7 @@
       const res = await fetch('/api/create-room', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ humanCount, botCount })
+        body: JSON.stringify({ humanCount, botCount, debugMode })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);

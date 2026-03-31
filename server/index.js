@@ -36,8 +36,10 @@ app.post('/api/create-room', (req, res) => {
   const { humanCount, botCount, smallBlind, bigBlind, startingChips, debugMode } = req.body;
 
   // 验证
-  const humans = parseInt(humanCount) || 1;
-  const bots = parseInt(botCount) || 1;
+  const parsedHumans = parseInt(humanCount, 10);
+  const parsedBots = parseInt(botCount, 10);
+  const humans = Number.isNaN(parsedHumans) ? 1 : parsedHumans;
+  const bots = Number.isNaN(parsedBots) ? 0 : parsedBots;
   const total = humans + bots;
 
   if (total < 2 || total > 9) {

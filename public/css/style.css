@@ -246,55 +246,55 @@ body {
   position: fixed;
   left: 16px;
   top: 70px;
-  width: 280px;
+  width: 520px;
   max-height: calc(100vh - 100px);
   overflow-y: auto;
   background: rgba(0,0,0,0.75);
   border: 1px solid var(--red);
   border-radius: 12px;
-  padding: 16px;
+  padding: 20px;
   backdrop-filter: blur(12px);
   z-index: 20;
 }
 
 .debug-panel .debug-title {
-  font-size: 0.72rem;
+  font-size: 0.95rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1.5px;
   color: var(--red);
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
 .debug-section {
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
 
 .debug-section-title {
-  font-size: 0.7rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-dim);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .debug-card-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 3px;
+  gap: 4px;
 }
 
 .debug-card-btn {
-  width: 32px;
-  height: 26px;
-  border-radius: 4px;
+  width: 46px;
+  height: 36px;
+  border-radius: 5px;
   border: 1px solid var(--border);
   background: rgba(255,255,255,0.04);
   color: var(--text);
   font-family: var(--mono);
-  font-size: 0.55rem;
+  font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.1s;
   display: flex;
@@ -348,20 +348,20 @@ body {
 
 .debug-assigned-card {
   font-family: var(--mono);
-  font-size: 0.65rem;
-  padding: 2px 6px;
-  border-radius: 4px;
+  font-size: 0.85rem;
+  padding: 3px 10px;
+  border-radius: 5px;
   background: rgba(78,168,255,0.12);
   color: var(--accent);
 }
 
 .debug-btn {
-  padding: 8px 16px;
+  padding: 10px 20px;
   border-radius: 8px;
   border: none;
   font-family: var(--font);
   font-weight: 600;
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.15s;
   width: 100%;
@@ -379,18 +379,18 @@ body {
 
 .debug-bot-actions {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .debug-bot-btn {
-  padding: 6px 14px;
-  border-radius: 7px;
+  padding: 10px 24px;
+  border-radius: 8px;
   border: 1px solid var(--border-light);
   background: transparent;
   color: var(--text);
   font-family: var(--font);
-  font-size: 0.75rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
@@ -620,6 +620,24 @@ body {
   font-family: var(--mono);
 }
 
+.top-result-banner {
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto 10px;
+  min-height: 1.9rem;
+  text-align: center;
+  font-size: 1.64rem;
+  font-weight: 700;
+  color: var(--gold);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.top-result-banner.visible {
+  opacity: 1;
+}
+
 .pot-chip {
   font-family: var(--mono);
   font-size: 0.8rem;
@@ -699,6 +717,27 @@ body {
   letter-spacing: 0.5px;
 }
 
+.table-pot-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.pot-chip-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 68px;
+}
+
+.pot-chip-image {
+  width: 68px;
+  height: 68px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45));
+}
+
 .community-row {
   display: flex;
   gap: 6px;
@@ -706,8 +745,8 @@ body {
 
 /* Poker cards */
 .card {
-  width: 50px;
-  height: 70px;
+  width: 100px;
+  height: 140px;
   border-radius: 6px;
   display: flex;
   flex-direction: column;
@@ -715,7 +754,7 @@ body {
   justify-content: center;
   font-family: var(--mono);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 1.8rem;
   line-height: 1.1;
   transition: transform 0.25s;
 }
@@ -728,7 +767,7 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
 }
 
-.card.face-up .suit-icon { font-size: 0.75rem; margin-top: 1px; }
+.card.face-up .suit-icon { font-size: 1.5rem; margin-top: 2px; }
 .card.face-up.red { color: var(--red); }
 
 .card.face-down {
@@ -738,7 +777,7 @@ body {
 
 .card.face-down::after {
   content: '♠';
-  font-size: 1.4rem;
+  font-size: 2.8rem;
   color: rgba(255,255,255,0.08);
 }
 
@@ -805,10 +844,10 @@ body {
 }
 
 .mini-card {
-  width: 52px;
-  height: 68px;
+  width: 104px;
+  height: 136px;
   border-radius: 6px;
-  font-size: 1rem;
+  font-size: 2rem;
   font-family: var(--mono);
   font-weight: 600;
   display: flex;
@@ -824,7 +863,7 @@ body {
 }
 .mini-card.face-down::after {
   content: '♠';
-  font-size: 1.2rem;
+  font-size: 2.4rem;
   color: rgba(255,255,255,0.12);
 }
 
@@ -834,7 +873,7 @@ body {
   box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 .mini-card.face-up.red { color: var(--red); }
-.mini-card .mini-suit { font-size: 0.8rem; }
+.mini-card .mini-suit { font-size: 1.6rem; }
 
 .seat-bet {
   font-family: var(--mono);
@@ -845,6 +884,24 @@ body {
   padding: 3px 10px;
   border-radius: 10px;
   border: 1px solid rgba(226,184,85,0.2);
+}
+
+.seat-bet-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.seat-chip-visual {
+  min-height: 48px;
+}
+
+.seat-chip-image {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 .seat-status {
@@ -1023,8 +1080,8 @@ body {
   .poker-table { max-width: 95vw; }
   .seats-layer { inset: -50px; }
   .seat-avatar { width: 38px; height: 38px; font-size: 0.75rem; }
-  .card { width: 40px; height: 56px; font-size: 0.75rem; }
-  .mini-card { width: 38px; height: 50px; font-size: 0.75rem; }
+  .card { width: 80px; height: 112px; font-size: 1.5rem; }
+  .mini-card { width: 76px; height: 100px; font-size: 1.5rem; }
   .game-log { display: none; }
   .action-btn { padding: 10px 18px; font-size: 0.8rem; }
 }

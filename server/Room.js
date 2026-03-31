@@ -29,8 +29,8 @@ class Room {
    */
   constructor(options) {
     this.id = generateId(6);
-    this.humanCount = options.humanCount || 1;
-    this.botCount = options.botCount || 1;
+    this.humanCount = Number.isInteger(options.humanCount) ? options.humanCount : 1;
+    this.botCount = Number.isInteger(options.botCount) ? options.botCount : 0;
     this.createdAt = Date.now();
 
     // 初始化游戏引擎

@@ -9,6 +9,7 @@
  */
 
 const Renderer = {
+    chipImageBasePath: 'assets/chips',
 
     /**
      * Seat positions (%) around the table ellipse.
@@ -104,11 +105,35 @@ const Renderer = {
   
     renderTopBar(state) {
       document.getElementById('handNum').textContent = `#${state.handNumber}`;
+      const topResultBanner = document.getElementById('topResultBanner');
+      if (!topResultBanner) return;
+
+      if (state.phase === 'showdown' && state.lastHandResult?.winners?.length) {
+        const result = state.lastHandResult;
+        const names = result.winners.map(id => {
+          const p = state.players.find(pp => pp.id === id);
+          return p ? p.name : id;
+        });
+        const firstWinnerId = result.winners[0];
+        const eval_ = result.evaluations?.[firstWinnerId];
+        const handName = eval_ ? eval_.name : '';
+        topResultBanner.textContent = handName
+          ? `${names.join(' & ')} wins with ${handName}!`
+          : `${names.join(' & ')} wins!`;
+        topResultBanner.classList.add('visible');
+      } else {
+        topResultBanner.textContent = '';
+        topResultBanner.classList.remove('visible');
+      }
     },
   
     renderCommunityCards(state) {
       const el = document.getElementById('communityCards');
-      const potHtml = `<div class="table-pot">Pot: ${state.pot}</div>`;
+      const potChipsHtml = this.renderChipVisual(state.pot, 'pot');
+      const potHtml = `<div class="table-pot-wrap">
+        <div class="table-pot">Pot: ${state.pot}</div>
+        ${potChipsHtml}
+      </div>`;
       const cardsHtml = `<div class="community-row">${Cards.renderCommunityCards(state.communityCards)}</div>`;
       el.innerHTML = potHtml + cardsHtml;
     },
@@ -145,7 +170,10 @@ const Renderer = {
         // Bet — shows current round bet (clears each round automatically from server)
         let betHtml = '';
         if (player.bet > 0) {
-          betHtml = `<div class="seat-bet">Bet: ${player.bet}</div>`;
+          betHtml = `<div class="seat-bet-wrap">
+            <div class="seat-bet">Bet: ${player.bet}</div>
+            ${this.renderChipVisual(player.bet, 'seat')}
+          </div>`;
         }
   
         // Status text / showdown hand name
@@ -209,22 +237,7 @@ const Renderer = {
       }
   
       if (state.phase === 'showdown') {
-        const result = state.lastHandResult;
-        let msg = 'Showdown!';
-        if (result && result.winners) {
-          const names = result.winners.map(id => {
-            const p = state.players.find(pp => pp.id === id);
-            return p ? p.name : id;
-          });
-          // Get winning hand name
-          const firstWinnerId = result.winners[0];
-          const eval_ = result.evaluations?.[firstWinnerId];
-          const handName = eval_ ? eval_.name : '';
-          msg = handName
-            ? `${names.join(' & ')} wins with ${handName}!`
-            : `${names.join(' & ')} wins!`;
-        }
-        bar.innerHTML = `<div class="waiting-msg">${msg} — Next hand starting soon...</div>`;
+        bar.innerHTML = '<div class="waiting-msg">Next hand starting soon...</div>';
         return;
       }
   
@@ -458,5 +471,22 @@ const Renderer = {
       if (GameClient.lastState) {
         this.renderDebugPanel(GameClient.lastState, GameClient.playerId);
       }
+    },
+
+    renderChipVisual(amount, context) {
+      const chipIndex = this.getChipIndexByAmount(amount);
+      if (chipIndex <= 0) return '';
+      const chipSrc = `${this.chipImageBasePath}/chip${chipIndex}.png`;
+      const chipClass = context === 'pot' ? 'pot-chip-image' : 'seat-chip-image';
+      return `<div class="chip-visual ${context}-chip-visual">
+        <img class="${chipClass}" src="${chipSrc}" alt="chip${chipIndex}">
+      </div>`;
+    },
+
+    getChipIndexByAmount(amount) {
+      const value = Number(amount) || 0;
+      if (value <= 0) return 0;
+      if (value >= 100) return 10;
+      return Math.ceil(value / 10);
     }
   };
